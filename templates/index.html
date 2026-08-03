@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fake News Detector | Multi-Input</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(20, 25, 35, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-slate-800 to-black min-h-screen flex items-center justify-center p-6 text-gray-100">
+    
+    <div class="glass-panel rounded-3xl p-8 md:p-12 w-full max-w-3xl">
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 rounded-full bg-blue-500/20 text-blue-400 mb-4 border border-blue-500/30">
+                <i class="fa-solid fa-shield-halved text-4xl"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+                Neural News Shield
+            </h1>
+            <p class="text-gray-400 mt-3">Analyze text, URLs, or upload screenshots.</p>
+        </div>
+        
+        <!-- Text or URL Input -->
+        <div class="relative group mb-4">
+            <textarea id="newsText" rows="4" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl p-5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Paste article text or a website URL (http://...)"></textarea>
+        </div>
+
+        <!-- Image Upload Input -->
+        <div class="mb-6 flex items-center justify-center w-full">
+            <label for="imageUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-800/50 hover:bg-gray-700/50 transition">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-3"></i>
+                    <p class="text-sm text-gray-400"><span class="font-semibold">Click to upload screenshot</span> or drag and drop</p>
+                    <p class="text-xs text-gray-500 mt-1" id="fileName">PNG, JPG up to 10MB</p>
+                </div>
+                <input id="imageUpload" type="file" class="hidden" accept="image/*" onchange="updateFileName()"/>
+            </label>
+        </div>
+        
+        <!-- Submit Button -->
+        <button onclick="checkNews()" id="verifyBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+            <i class="fa-solid fa-magnifying-glass"></i> Analyze Authenticity
+        </button>
+        
+        <div id="resultBox" class="mt-8 hidden overflow-hidden rounded-xl transition-all duration-500"></div>
+    </div>
+
+    <script>
+        // Update text when a file is selected
+        function updateFileName() {
+            const input = document.getElementById('imageUpload');
+            const nameDisplay = document.getElementById('fileName');
+            if (input.files.length > 0) {
+                nameDisplay.innerHTML = `<span class="text-blue-400 font-bold">${input.files[0].name} selected</span>`;
+            }
+        }
+
+        async function checkNews() {
+            const text = document.getElementById('newsText').value;
+            const imageFile = document.getElementById('imageUpload').files[0];
+            const resultBox = document.getElementById('resultBox');
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!text.trim() && !imageFile) {
+                alert("Please paste text, a URL, or upload an image!");
+                return;
+            }
+
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = "mt-8 text-center bg-gray-800/50 border border-gray-700 p-6 rounded-xl";
+            resultBox.innerHTML = '<p class="text-blue-400 font-semibold animate-pulse">Extracting and analyzing data...</p>';
+
+            // Using FormData to handle both text and files
+            const formData = new FormData();
+            if (imageFile) formData.append('image', imageFile);
+            if (text) formData.append('text', text);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    body: formData // No headers needed for FormData, the browser sets it automatically
+                });
+                
+                const data = await response.json();
+                
+                if (data.prediction === "Real News") {
+                    resultBox.className = "mt-8 text-center bg-emerald-900/20 border border-emerald-500/50 p-6 rounded-xl";
+                    resultBox.innerHTML = `<i class="fa-solid fa-circle-check text-4xl text-emerald-400 mb-2"></i><h2 class="text-2xl font-bold text-emerald-300">REAL NEWS</h2>`;
+                } else if (data.prediction === "Fake News") {
+                    resultBox.className = "mt-8 text-center bg-rose-900/20 border border-rose-500/50 p-6 rounded-xl";
+                    resultBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-4xl text-rose-500 mb-2"></i><h2 class="text-2xl font-bold text-rose-400">FAKE NEWS</h2>`;
+                } else {
+                    // Display Errors (like "Could not scrape link")
+                    resultBox.className = "mt-8 text-center bg-yellow-900/20 border border-yellow-500/50 p-6 rounded-xl";
+                    resultBox.innerHTML = `<p class="text-yellow-400">${data.prediction}</p>`;
+                }
+            } catch (error) {
+                resultBox.innerHTML = '<p class="text-red-500">Connection Failed.</p>';
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Analyze Authenticity';
+            }
+        }
+    </script>
+</body>
+</html>
