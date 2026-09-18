@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Drishya | AI Fake News Detector</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", sans-serif;
+            background: #050816;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* =========================
+           VIBRANT BACKGROUND
+        ========================== */
+
+        .background {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(124,58,237,.35), transparent 28%),
+                radial-gradient(circle at 90% 10%, rgba(6,182,212,.30), transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(236,72,153,.25), transparent 28%),
+                radial-gradient(circle at 20% 80%, rgba(59,130,246,.20), transparent 30%),
+                #050816;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .45;
+            animation: float 12s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: #7c3aed;
+            top: -150px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            width: 350px;
+            height: 350px;
+            background: #06b6d4;
+            top: 30%;
+            right: -120px;
+            animation-delay: 2s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: #ec4899;
+            bottom: -100px;
+            left: 30%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(40px, -50px) scale(1.15);
+            }
+        }
+
+        /* =========================
+           NAVBAR
+        ========================== */
+
+        .navbar {
+            background: rgba(5, 8, 22, .55);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .logo {
+            background: linear-gradient(
+                135deg,
+                #a78bfa,
+                #22d3ee,
+                #f472b6
+            );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* =========================
+           HERO
+        ========================== */
+
+        .hero-title {
+            font-size: clamp(3rem, 7vw, 6.5rem);
+            line-height: .95;
+            letter-spacing: -5px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(
+                90deg,
+                #a78bfa,
+                #22d3ee,
+                #f472b6
+            );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-description {
+            color: #a5b4fc;
+            max-width: 650px;
+        }
+
+        /* =========================
+           GLASS CARD
+        ========================== */
+
+        .glass {
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.12);
+            backdrop-filter: blur(25px);
+            box-shadow:
+                0 30px 80px rgba(0,0,0,.35),
+                inset 0 1px rgba(255,255,255,.08);
+        }
+
+        /* =========================
+           BUTTON
+        ========================== */
+
+        .gradient-button {
+            background: linear-gradient(
+                135deg,
+                #7c3aed,
+                #2563eb,
+                #06b6d4
+            );
+
+            box-shadow:
+                0 10px 30px rgba(59,130,246,.35);
+        }
+
+        .gradient-button:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 15px 40px rgba(59,130,246,.5);
+        }
+
+        /* =========================
+           ANALYZER
+        ========================== */
+
+        .input-box {
+            background: rgba(0,0,0,.25);
+            border: 1px solid rgba(255,255,255,.1);
+            transition: .3s;
+        }
+
+        .input-box:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 25px rgba(34,211,238,.12);
+            outline: none;
+        }
+
+        .upload-box {
+            border: 2px dashed rgba(255,255,255,.18);
+            background: rgba(255,255,255,.03);
+            transition: .3s;
+        }
+
+        .upload-box:hover,
+        .upload-box.dragover {
+            border-color: #22d3ee;
+            background: rgba(34,211,238,.07);
+        }
+
+        /* =========================
+           RESULT
+        ========================== */
+
+        .result-real {
+            border: 1px solid rgba(16,185,129,.5);
+            background: rgba(16,185,129,.1);
+        }
+
+        .result-fake {
+            border: 1px solid rgba(244,63,94,.5);
+            background: rgba(244,63,94,.1);
+        }
+
+        .result-warning {
+            border: 1px solid rgba(250,204,21,.5);
+            background: rgba(250,204,21,.1);
+        }
+
+        /* =========================
+           STAT CARDS
+        ========================== */
+
+        .stat-card {
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            background: rgba(255,255,255,.1);
+        }
+
+        /* =========================
+           PULSE
+        ========================== */
+
+        .pulse-dot {
+            width: 9px;
+            height: 9px;
+            background: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0% {
+                box-shadow: 0 0 0 0 rgba(34,197,94,.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 12px rgba(34,197,94,0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34,197,94,0);
+            }
+        }
+
+        /* =========================
+           GRID
+        ========================== */
+
+        .grid-background {
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.035) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.035) 1px,
+                    transparent 1px
+                );
+
+            background-size: 50px 50px;
+        }
+
+        /* =========================
+           SCROLL INDICATOR
+        ========================== */
+
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(8px);
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<!-- =========================
+     BACKGROUND
+========================== -->
+
+<div class="background">
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+</div>
+
+
+<!-- =========================
+     NAVBAR
+========================== -->
+
+<nav class="navbar fixed top-0 left-0 right-0 z-50">
+
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+        <a href="#" class="flex items-center gap-3">
+
+            <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center
+                bg-gradient-to-br from-violet-600 to-cyan-400
+                shadow-lg shadow-violet-500/30"
+            >
+                <i class="fa-solid fa-eye text-white text-xl"></i>
+            </div>
+
+            <div>
+
+                <h1 class="text-xl font-black logo">
+                    DRISHYA
+                </h1>
+
+                <p class="text-[9px] tracking-[3px] text-gray-400">
+                    AI NEWS INTELLIGENCE
+                </p>
+
+            </div>
+
+        </a>
+
+
+        <div class="hidden md:flex items-center gap-8 text-sm text-gray-300">
+
+            <a href="#home" class="hover:text-cyan-300 transition">
+                Home
+            </a>
+
+            <a href="#analyzer" class="hover:text-cyan-300 transition">
+                Analyzer
+            </a>
+
+            <a href="#how" class="hover:text-cyan-300 transition">
+                How It Works
+            </a>
+
+        </div>
+
+
+        <a
+            href="#analyzer"
+            class="hidden sm:flex items-center gap-2
+            px-5 py-2.5 rounded-full
+            bg-white/10 border border-white/10
+            hover:bg-white/15 transition text-sm"
+        >
+
+            <span class="pulse-dot"></span>
+
+            Start Checking
+
+        </a>
+
+    </div>
+
+</nav>
+
+
+<!-- =========================
+     HERO
+========================== -->
+
+<section
+    id="home"
+    class="min-h-screen flex items-center relative pt-24 grid-background"
+>
+
+    <div class="max-w-7xl mx-auto px-6 py-20 w-full">
+
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+
+            <!-- LEFT -->
+
+            <div>
+
+                <div
+                    class="inline-flex items-center gap-3
+                    px-4 py-2 rounded-full
+                    bg-white/5 border border-white/10
+                    text-sm text-gray-300 mb-7"
+                >
+
+                    <span class="pulse-dot"></span>
+
+                    AI-Powered News Verification
+
+                </div>
+
+
+                <h1 class="hero-title font-black">
+
+                    See Beyond
+                    <br>
+
+                    <span class="gradient-text">
+                        The Headline.
+                    </span>
+
+                </h1>
+
+
+                <p class="hero-description text-lg md:text-xl mt-8 leading-relaxed">
+
+                    <b class="text-white">Drishya</b> uses artificial intelligence
+                    to analyze news articles, URLs and screenshots —
+                    helping you distinguish
+                    <span class="text-emerald-400 font-semibold">
+                        facts
+                    </span>
+                    from
+                    <span class="text-rose-400 font-semibold">
+                        misinformation.
+                    </span>
+
+                </p>
+
+
+                <div class="flex flex-wrap gap-4 mt-9">
+
+                    <a
+                        href="#analyzer"
+                        class="gradient-button px-7 py-4 rounded-xl
+                        font-bold flex items-center gap-3
+                        transition-all"
+                    >
+
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                        Analyze News
+
+                        <i class="fa-solid fa-arrow-right text-sm"></i>
+
+                    </a>
+
+
+                    <a
+                        href="#how"
+                        class="px-7 py-4 rounded-xl
+                        border border-white/10
+                        bg-white/5
+                        hover:bg-white/10
+                        transition font-semibold"
+                    >
+
+                        How It Works
+
+                    </a>
+
+                </div>
+
+
+                <!-- Mini trust -->
+
+                <div class="flex flex-wrap gap-8 mt-12 text-sm text-gray-400">
+
+                    <div class="flex items-center gap-2">
+
+                        <i class="fa-solid fa-brain text-violet-400"></i>
+
+                        Deep Learning
+
+                    </div>
+
+                    <div class="flex items-center gap-2">
+
+                        <i class="fa-solid fa-bolt text-yellow-400"></i>
+
+                        Fast Analysis
+
+                    </div>
+
+                    <div class="flex items-center gap-2">
+
+                        <i class="fa-solid fa-shield text-cyan-400"></i>
+
+                        Multi-Input
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RIGHT HERO VISUAL -->
+
+            <div class="relative hidden lg:block">
+
+                <div
+                    class="absolute inset-0
+                    bg-gradient-to-r from-violet-500/20
+                    to-cyan-500/20
+                    blur-3xl rounded-full"
+                ></div>
+
+
+                <div class="glass rounded-[35px] p-7 relative">
+
+                    <div class="flex items-center justify-between mb-7">
+
+                        <div class="flex items-center gap-3">
+
+                            <div
+                                class="w-12 h-12 rounded-2xl
+                                bg-violet-500/20
+                                flex items-center justify-center"
+                            >
+
+                                <i class="fa-solid fa-shield-halved
+                                text-violet-300 text-xl"></i>
+
+                            </div>
+
+                            <div>
+
+                                <p class="font-bold">
+                                    Drishya AI
+                                </p>
+
+                                <p class="text-xs text-gray-500">
+                                    News Intelligence Engine
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="text-xs text-emerald-400
+                        flex items-center gap-2">
+
+                            <span class="pulse-dot"></span>
+
+                            ONLINE
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="space-y-4">
+
+                        <div class="h-3 rounded-full bg-white/10 w-full"></div>
+
+                        <div class="h-3 rounded-full bg-white/10 w-5/6"></div>
+
+                        <div class="h-3 rounded-full bg-white/10 w-4/6"></div>
+
+                    </div>
+
+
+                    <div
+                        class="mt-8 p-5 rounded-2xl
+                        bg-emerald-500/10
+                        border border-emerald-400/20"
+                    >
+
+                        <div class="flex items-center justify-between">
+
+                            <div>
+
+                                <p class="text-xs text-gray-400">
+                                    AI VERDICT
+                                </p>
+
+                                <p class="text-2xl font-black
+                                text-emerald-400 mt-1">
+
+                                    REAL NEWS
+
+                                </p>
+
+                            </div>
+
+
+                            <div
+                                class="w-14 h-14 rounded-full
+                                bg-emerald-500/10
+                                border border-emerald-400/30
+                                flex items-center justify-center"
+                            >
+
+                                <i class="fa-solid fa-check
+                                text-emerald-400 text-2xl"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+
+                        <div
+                            class="bg-white/5 rounded-xl p-4
+                            border border-white/5"
+                        >
+
+                            <p class="text-xs text-gray-500">
+                                Confidence
+                            </p>
+
+                            <p class="text-xl font-bold mt-1">
+                                96.8%
+                            </p>
+
+                        </div>
+
+
+                        <div
+                            class="bg-white/5 rounded-xl p-4
+                            border border-white/5"
+                        >
+
+                            <p class="text-xs text-gray-500">
+                                Analysis
+                            </p>
+
+                            <p class="text-xl font-bold mt-1">
+                                1.2s
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="absolute bottom-8 left-1/2
+            -translate-x-1/2
+            text-gray-500 text-xs
+            flex flex-col items-center gap-2"
+        >
+
+            Scroll to explore
+
+            <i class="fa-solid fa-chevron-down scroll-indicator"></i>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     ANALYZER
+========================== -->
+
+<section id="analyzer" class="py-24 relative">
+
+    <div class="max-w-5xl mx-auto px-6">
+
+        <div class="text-center mb-12">
+
+            <p class="text-cyan-400 font-bold uppercase
+            tracking-[3px] text-sm">
+                AI Verification
+            </p>
+
+            <h2 class="text-4xl md:text-5xl font-black mt-3">
+                Verify Before You <span class="gradient-text">Share.</span>
+            </h2>
+
+            <p class="text-gray-400 mt-4">
+                Paste news, enter a URL or upload a screenshot.
+            </p>
+
+        </div>
+
+
+        <div class="glass rounded-[30px] p-6 md:p-10">
+
+
+            <!-- INPUT TABS -->
+
+            <div class="flex flex-wrap gap-3 mb-7">
+
+                <button
+                    onclick="focusText()"
+                    class="px-4 py-2 rounded-full
+                    bg-violet-500/20
+                    border border-violet-400/20
+                    text-violet-300 text-sm"
+                >
+
+                    <i class="fa-solid fa-align-left mr-2"></i>
+
+                    Text / URL
+
+                </button>
+
+
+                <button
+                    onclick="focusUpload()"
+                    class="px-4 py-2 rounded-full
+                    bg-white/5
+                    border border-white/10
+                    text-gray-400 text-sm"
+                >
+
+                    <i class="fa-solid fa-image mr-2"></i>
+
+                    Screenshot
+
+                </button>
+
+            </div>
+
+
+            <!-- TEXT -->
+
+            <textarea
+                id="newsText"
+                rows="7"
+                class="input-box w-full rounded-2xl
+                p-6 text-gray-100 resize-none
+                placeholder-gray-500"
+                placeholder="Paste the news article, headline, or URL here..."
+            ></textarea>
+
+
+            <!-- UPLOAD -->
+
+            <div class="mt-5">
+
+                <label
+                    for="imageUpload"
+                    id="uploadBox"
+                    class="upload-box rounded-2xl
+                    min-h-[170px]
+                    flex flex-col items-center
+                    justify-center cursor-pointer"
+                >
+
+                    <div
+                        class="w-16 h-16 rounded-2xl
+                        bg-cyan-500/10
+                        border border-cyan-400/20
+                        flex items-center justify-center
+                        mb-4"
+                    >
+
+                        <i class="fa-solid fa-cloud-arrow-up
+                        text-2xl text-cyan-300"></i>
+
+                    </div>
+
+
+                    <p class="font-bold text-gray-200">
+                        Drop your screenshot here
+                    </p>
+
+                    <p class="text-sm text-gray-500 mt-2">
+                        or click to browse
+                    </p>
+
+                    <p
+                        id="fileName"
+                        class="text-xs text-cyan-400 mt-3"
+                    >
+                        PNG, JPG up to 10MB
+                    </p>
+
+                    <input
+                        id="imageUpload"
+                        type="file"
+                        class="hidden"
+                        accept="image/*"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <!-- BUTTON -->
+
+            <button
+                onclick="checkNews()"
+                id="verifyBtn"
+                class="gradient-button w-full
+                mt-7 py-5 rounded-2xl
+                font-bold text-lg
+                transition-all"
+            >
+
+                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+
+                Analyze Authenticity
+
+            </button>
+
+
+            <!-- LOADING -->
+
+            <div
+                id="loadingBox"
+                class="hidden mt-7
+                bg-white/5 rounded-2xl
+                p-7 text-center"
+            >
+
+                <div
+                    class="w-14 h-14 rounded-full
+                    border-4 border-white/10
+                    border-t-cyan-400
+                    animate-spin mx-auto"
+                ></div>
+
+                <p class="text-cyan-300 font-bold mt-5">
+                    AI is analyzing the content...
+                </p>
+
+                <p class="text-gray-500 text-sm mt-2">
+                    Extracting • Processing • Classifying
+                </p>
+
+            </div>
+
+
+            <!-- RESULT -->
+
+            <div
+                id="resultBox"
+                class="hidden mt-7 rounded-2xl p-7 text-center"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     STATS
+========================== -->
+
+<section class="py-16">
+
+    <div class="max-w-6xl mx-auto px-6">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            <div class="glass stat-card rounded-2xl p-6">
+
+                <i class="fa-solid fa-brain text-violet-400 text-2xl"></i>
+
+                <p class="text-3xl font-black mt-4">
+                    AI
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Powered Analysis
+                </p>
+
+            </div>
+
+
+            <div class="glass stat-card rounded-2xl p-6">
+
+                <i class="fa-solid fa-bolt text-yellow-400 text-2xl"></i>
+
+                <p class="text-3xl font-black mt-4">
+                    Fast
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Real-time Detection
+                </p>
+
+            </div>
+
+
+            <div class="glass stat-card rounded-2xl p-6">
+
+                <i class="fa-solid fa-file-lines text-cyan-400 text-2xl"></i>
+
+                <p class="text-3xl font-black mt-4">
+                    3+
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Input Methods
+                </p>
+
+            </div>
+
+
+            <div class="glass stat-card rounded-2xl p-6">
+
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
+
+                <p class="text-3xl font-black mt-4">
+                    24/7
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Verification
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     HOW IT WORKS
+========================== -->
+
+<section id="how" class="py-24">
+
+    <div class="max-w-6xl mx-auto px-6">
+
+        <div class="text-center mb-14">
+
+            <p class="text-violet-400 font-bold
+            uppercase tracking-[3px] text-sm">
+                Simple Process
+            </p>
+
+            <h2 class="text-4xl md:text-5xl font-black mt-3">
+                How <span class="gradient-text">Drishya</span> Works
+            </h2>
+
+        </div>
+
+
+        <div class="grid md:grid-cols-3 gap-6">
+
+
+            <div class="glass rounded-3xl p-8">
+
+                <div
+                    class="w-14 h-14 rounded-2xl
+                    bg-violet-500/15
+                    flex items-center justify-center"
+                >
+
+                    <span class="text-violet-300 font-black text-xl">
+                        01
+                    </span>
+
+                </div>
+
+                <h3 class="text-xl font-bold mt-7">
+                    Submit Content
+                </h3>
+
+                <p class="text-gray-400 mt-3 leading-relaxed">
+                    Paste an article, enter a URL or upload
+                    a screenshot of the news.
+                </p>
+
+            </div>
+
+
+            <div class="glass rounded-3xl p-8">
+
+                <div
+                    class="w-14 h-14 rounded-2xl
+                    bg-cyan-500/15
+                    flex items-center justify-center"
+                >
+
+                    <span class="text-cyan-300 font-black text-xl">
+                        02
+                    </span>
+
+                </div>
+
+                <h3 class="text-xl font-bold mt-7">
+                    AI Analysis
+                </h3>
+
+                <p class="text-gray-400 mt-3 leading-relaxed">
+                    Our machine learning and deep learning
+                    pipeline analyzes the submitted content.
+                </p>
+
+            </div>
+
+
+            <div class="glass rounded-3xl p-8">
+
+                <div
+                    class="w-14 h-14 rounded-2xl
+                    bg-emerald-500/15
+                    flex items-center justify-center"
+                >
+
+                    <span class="text-emerald-300 font-black text-xl">
+                        03
+                    </span>
+
+                </div>
+
+                <h3 class="text-xl font-bold mt-7">
+                    Get Your Verdict
+                </h3>
+
+                <p class="text-gray-400 mt-3 leading-relaxed">
+                    Drishya returns a clear classification
+                    showing whether the news is real or fake.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     CTA
+========================== -->
+
+<section class="py-24">
+
+    <div class="max-w-5xl mx-auto px-6">
+
+        <div
+            class="glass rounded-[35px]
+            p-10 md:p-16 text-center
+            relative overflow-hidden"
+        >
+
+            <div
+                class="absolute w-72 h-72
+                bg-violet-600/20
+                rounded-full blur-3xl
+                -top-40 -left-20"
+            ></div>
+
+            <div
+                class="absolute w-72 h-72
+                bg-cyan-500/20
+                rounded-full blur-3xl
+                -bottom-40 -right-20"
+            ></div>
+
+
+            <div class="relative">
+
+                <i
+                    class="fa-solid fa-eye
+                    text-5xl text-cyan-300"
+                ></i>
+
+                <h2 class="text-4xl md:text-5xl
+                font-black mt-6">
+
+                    Don't Just Read.
+                    <br>
+
+                    <span class="gradient-text">
+                        Verify.
+                    </span>
+
+                </h2>
+
+                <p class="text-gray-400 max-w-xl
+                mx-auto mt-5">
+
+                    In a world where information spreads instantly,
+                    make every click a little more informed.
+
+                </p>
+
+
+                <a
+                    href="#analyzer"
+                    class="gradient-button inline-flex
+                    items-center gap-3
+                    mt-8 px-8 py-4
+                    rounded-xl font-bold
+                    transition-all"
+                >
+
+                    Start With Drishya
+
+                    <i class="fa-solid fa-arrow-up"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     FOOTER
+========================== -->
+
+<footer class="border-t border-white/10 py-10">
+
+    <div
+        class="max-w-7xl mx-auto px-6
+        flex flex-col md:flex-row
+        justify-between items-center gap-5"
+    >
+
+        <div class="flex items-center gap-3">
+
+            <div
+                class="w-9 h-9 rounded-lg
+                bg-gradient-to-br
+                from-violet-600 to-cyan-400
+                flex items-center justify-center"
+            >
+
+                <i class="fa-solid fa-eye"></i>
+
+            </div>
+
+            <span class="font-black logo">
+                DRISHYA
+            </span>
+
+        </div>
+
+
+        <p class="text-gray-500 text-sm text-center">
+
+            AI-powered news verification system
+
+        </p>
+
+
+        <p class="text-gray-600 text-xs">
+
+            © 2026 Drishya
+
+        </p>
+
+    </div>
+
+</footer>
+
+
+<!-- =========================
+     JAVASCRIPT
+========================== -->
+
+<script>
+
+    const imageInput = document.getElementById("imageUpload");
+    const uploadBox = document.getElementById("uploadBox");
+    const fileName = document.getElementById("fileName");
+
+
+    /* =========================
+       FILE UPLOAD
+    ========================== */
+
+    imageInput.addEventListener("change", function () {
+
+        if (this.files.length > 0) {
+
+            const file = this.files[0];
+
+            fileName.innerHTML =
+                `<span class="text-emerald-400 font-semibold">
+                    <i class="fa-solid fa-circle-check mr-1"></i>
+                    ${file.name}
+                </span>`;
+
+        }
+
+    });
+
+
+    /* =========================
+       DRAG & DROP
+    ========================== */
+
+    uploadBox.addEventListener("dragover", function (e) {
+
+        e.preventDefault();
+
+        uploadBox.classList.add("dragover");
+
+    });
+
+
+    uploadBox.addEventListener("dragleave", function () {
+
+        uploadBox.classList.remove("dragover");
+
+    });
+
+
+    uploadBox.addEventListener("drop", function (e) {
+
+        e.preventDefault();
+
+        uploadBox.classList.remove("dragover");
+
+        if (e.dataTransfer.files.length > 0) {
+
+            imageInput.files = e.dataTransfer.files;
+
+            const file = e.dataTransfer.files[0];
+
+            fileName.innerHTML =
+                `<span class="text-emerald-400 font-semibold">
+                    <i class="fa-solid fa-circle-check mr-1"></i>
+                    ${file.name}
+                </span>`;
+
+        }
+
+    });
+
+
+    /* =========================
+       FOCUS FUNCTIONS
+    ========================== */
+
+    function focusText() {
+
+        document.getElementById("newsText").focus();
+
+    }
+
+
+    function focusUpload() {
+
+        document.getElementById("imageUpload").click();
+
+    }
+
+
+    /* =========================
+       MAIN ANALYSIS
+    ========================== */
+
+    async function checkNews() {
+
+        const text =
+            document.getElementById("newsText").value.trim();
+
+        const imageFile =
+            document.getElementById("imageUpload").files[0];
+
+        const resultBox =
+            document.getElementById("resultBox");
+
+        const loadingBox =
+            document.getElementById("loadingBox");
+
+        const verifyBtn =
+            document.getElementById("verifyBtn");
+
+
+        /* VALIDATION */
+
+        if (!text && !imageFile) {
+
+            resultBox.className =
+                "mt-7 result-warning rounded-2xl p-7 text-center";
+
+            resultBox.innerHTML = `
+
+                <i class="fa-solid fa-circle-exclamation
+                text-3xl text-yellow-400"></i>
+
+                <h3 class="text-xl font-bold
+                text-yellow-300 mt-3">
+
+                    Nothing to Analyze
+
+                </h3>
+
+                <p class="text-gray-400 mt-2">
+
+                    Please enter news text, a URL,
+                    or upload a screenshot.
+
+                </p>
+
+            `;
+
+            resultBox.classList.remove("hidden");
+
+            return;
+
+        }
+
+
+        /* LOADING */
+
+        verifyBtn.disabled = true;
+
+        verifyBtn.innerHTML = `
+
+            <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+
+            Analyzing...
+
+        `;
+
+        resultBox.classList.add("hidden");
+
+        loadingBox.classList.remove("hidden");
+
+
+        /* FORM DATA */
+
+        const formData = new FormData();
+
+        if (text) {
+
+            formData.append("text", text);
+
+        }
+
+        if (imageFile) {
+
+            formData.append("image", imageFile);
+
+        }
+
+
+        try {
+
+            const response = await fetch(
+                "http://127.0.0.1:5000/predict",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Server returned ${response.status}`
+                );
+
+            }
+
+
+            const data = await response.json();
+
+
+            loadingBox.classList.add("hidden");
+
+            resultBox.classList.remove("hidden");
+
+
+            /* =========================
+               REAL NEWS
+            ========================== */
+
+            if (data.prediction === "Real News") {
+
+                resultBox.className =
+                    "mt-7 result-real rounded-2xl p-8 text-center";
+
+
+                resultBox.innerHTML = `
+
+                    <div class="mx-auto w-20 h-20
+                    rounded-full bg-emerald-500/15
+                    border border-emerald-400/30
+                    flex items-center justify-center">
+
+                        <i class="fa-solid fa-check
+                        text-4xl text-emerald-400"></i>
+
+                    </div>
+
+
+                    <p class="text-xs tracking-[3px]
+                    text-emerald-400 font-bold mt-5">
+
+                        AI VERDICT
+
+                    </p>
+
+
+                    <h2 class="text-4xl font-black
+                    text-emerald-300 mt-2">
+
+                        REAL NEWS
+
+                    </h2>
+
+
+                    <p class="text-gray-400 mt-3">
+
+                        The submitted content appears
+                        to be authentic.
+
+                    </p>
+
+                `;
+
+            }
+
+
+            /* =========================
+               FAKE NEWS
+            ========================== */
+
+            else if (data.prediction === "Fake News") {
+
+                resultBox.className =
+                    "mt-7 result-fake rounded-2xl p-8 text-center";
+
+
+                resultBox.innerHTML = `
+
+                    <div class="mx-auto w-20 h-20
+                    rounded-full bg-rose-500/15
+                    border border-rose-400/30
+                    flex items-center justify-center">
+
+                        <i class="fa-solid fa-triangle-exclamation
+                        text-4xl text-rose-400"></i>
+
+                    </div>
+
+
+                    <p class="text-xs tracking-[3px]
+                    text-rose-400 font-bold mt-5">
+
+                        AI VERDICT
+
+                    </p>
+
+
+                    <h2 class="text-4xl font-black
+                    text-rose-300 mt-2">
+
+                        FAKE NEWS
+
+                    </h2>
+
+
+                    <p class="text-gray-400 mt-3">
+
+                        The submitted content may contain
+                        misleading or false information.
+
+                    </p>
+
+                `;
+
+            }
+
+
+            /* =========================
+               OTHER RESPONSE
+            ========================== */
+
+            else {
+
+                resultBox.className =
+                    "mt-7 result-warning rounded-2xl p-8 text-center";
+
+
+                resultBox.innerHTML = `
+
+                    <i class="fa-solid fa-circle-info
+                    text-4xl text-yellow-400"></i>
+
+                    <p class="text-yellow-300
+                    font-semibold mt-4">
+
+                        ${data.prediction || "Unable to classify content."}
+
+                    </p>
+
+                `;
+
+            }
+
+        }
+
+
+        catch (error) {
+
+            console.error(error);
+
+            loadingBox.classList.add("hidden");
+
+            resultBox.classList.remove("hidden");
+
+            resultBox.className =
+                "mt-7 result-fake rounded-2xl p-8 text-center";
+
+
+            resultBox.innerHTML = `
+
+                <i class="fa-solid fa-server
+                text-4xl text-rose-400"></i>
+
+                <h3 class="text-xl font-bold
+                text-rose-300 mt-4">
+
+                    Connection Failed
+
+                </h3>
+
+                <p class="text-gray-400 mt-2">
+
+                    Make sure your Flask backend
+                    is running on port 5000.
+
+                </p>
+
+            `;
+
+        }
+
+
+        finally {
+
+            verifyBtn.disabled = false;
+
+            verifyBtn.innerHTML = `
+
+                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+
+                Analyze Authenticity
+
+            `;
+
+        }
+
+    }
+
+</script>
+
+</body>
+</html>
